@@ -7,6 +7,7 @@ public class Movement : MonoBehaviour {
     public Speeds CurrentSpeed;
     public Gamemodes CurrentGamemode;
 
+    public bool clicking = false;
     public bool clickProcessed = false;
     //                       0      1      2       3      4
     float[] SpeedValues = { 8.382f, 10.386f, 12.912f, 15.6f, 19.203f };
@@ -121,7 +122,7 @@ public class Movement : MonoBehaviour {
 
     void FixedUpdate() {
         rb.velocity = new Vector2(0, rb.velocity.y);
-        rb.position += Vector2.right * SpeedValues[(int) CurrentSpeed] * Time.deltaTime;
+        //rb.position += Vector2.right * SpeedValues[(int) CurrentSpeed] * Time.deltaTime;
         Invoke(CurrentGamemode.ToString(), 0);
 
         if (Input.GetKeyDown(KeyCode.R)) {
@@ -129,16 +130,25 @@ public class Movement : MonoBehaviour {
         }
     }
 
+    private void Update() {
+        if (Input.GetMouseButton(0)) {
+            clicking = true;
+        }
+        else {
+            clicking = false;
+        }
+    }
+
 
     #region Gamemodes Region
     void Cube() {
-        if (!Input.GetMouseButton(0) || OnGround())
+        if (!clicking || OnGround())
             clickProcessed = false;
 
         rb.gravityScale = 9.057f * Gravity;
         generic.LimitYVelocity(25.9f, rb);
 
-        if (Input.GetMouseButton(0)) {
+        if (clicking) {
             if (OnGround() && !clickProcessed) {
                 clickProcessed = true;
                 rb.velocity = Vector2.up * 19.5269f * Gravity;
@@ -162,10 +172,10 @@ public class Movement : MonoBehaviour {
         Sprite.rotation = Quaternion.Slerp(Sprite.rotation, shipTargetRotation, Time.deltaTime * rotationSpeed); // lerp the rotation
 
         generic.LimitYVelocity(17.8f, rb);
-        if (!Input.GetMouseButton(0)) {
+        if (!clicking) {
             newShipClick = true;
         }
-        if (Input.GetMouseButton(0)) {
+        if (clicking) {
             rb.gravityScale = -shipGravity;
             if (newShipClick) {
                 rb.velocity += Vector2.up * shipFirstClickBoost;
@@ -180,14 +190,14 @@ public class Movement : MonoBehaviour {
 
     bool ballInTransition = false;
     void Ball() {
-        if (!Input.GetMouseButton(0))
+        if (!clicking)
             clickProcessed = false;
         if (OnGround())
             ballInTransition = false;
 
         rb.gravityScale = 6.2f * Gravity;
 
-        if (Input.GetMouseButton(0)) {
+        if (clicking) {
             if (OnGround() && !clickProcessed) {
                 clickProcessed = true;
                 Gravity *= -1;
@@ -202,13 +212,13 @@ public class Movement : MonoBehaviour {
     void UFO() {
         ufoTargetRotation = Quaternion.Euler(0, 0, Mathf.Min(0, rb.velocity.y * -1.2f));
         Sprite.rotation = Quaternion.Slerp(Sprite.rotation, ufoTargetRotation, Time.deltaTime * 5);
-        if (!Input.GetMouseButton(0))
+        if (!clicking)
             clickProcessed = false;
 
         rb.gravityScale = 4.1483f * Gravity;
         generic.LimitYVelocity(10.841f, rb);
 
-        if (Input.GetMouseButton(0)) {
+        if (clicking) {
             if (!clickProcessed) {
                 clickProcessed = true;
                 rb.velocity = Vector2.up * 10.841f * Gravity;
@@ -218,23 +228,23 @@ public class Movement : MonoBehaviour {
 
     Quaternion waveTargetRotation;
     void Wave() {
-        waveTargetRotation = Quaternion.Euler(0, 0, (Input.GetMouseButton(0) ? 1 : -1) * 45);
+        waveTargetRotation = Quaternion.Euler(0, 0, (clicking ? 1 : -1) * 45);
         if (rb.velocity.y == 0)
             waveTargetRotation = Quaternion.Euler(0, 0, 0);
 
         Sprite.rotation = Quaternion.Slerp(Sprite.rotation, waveTargetRotation, Time.deltaTime * rotationSpeed);
         rb.gravityScale = 0;
-        rb.velocity = new Vector2(0, SpeedValues[(int)CurrentSpeed] * (Input.GetMouseButton(0) ? 1 : -1) * Gravity);
+        rb.velocity = new Vector2(0, SpeedValues[(int)CurrentSpeed] * (clicking ? 1 : -1) * Gravity);
     }
 
     void Spider() {
-        if (!Input.GetMouseButton(0))
+        if (!clicking)
             clickProcessed = false;
 
         rb.gravityScale = 6.2f * Gravity;
         generic.LimitYVelocity(238.29f, rb);
 
-        if (Input.GetMouseButton(0)) {
+        if (clicking) {
             if (OnGround() && !clickProcessed) {
                 clickProcessed = true;
                 rb.velocity = Vector2.up * 238.29f * Gravity;

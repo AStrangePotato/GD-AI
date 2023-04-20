@@ -13,31 +13,28 @@ public class Agent : MonoBehaviour {
 
     Movement movement;
 
-    void print<T>(T[] array) {
-        Debug.Log(string.Join(" ", array));
+    //distance to closest obstacle sent by ray
+    //5 speeds, 6 gamemodes, onground
+    int rays = 18; //is actually rays+1 amount of rays because of <=
+    int inputLength; //+1 extra ray
+    float[] gameState;
 
-    }
-
-    float Sigmoid(float n) {
-        return 1 / (1 + Mathf.Pow(2.718281828f, -n));
-    }
     // Start is called before the first frame update
     void Start() {
+        //distance to closest obstacle sent by ray
+        //5 speeds, 6 gamemodes, onground
+        //is actually rays+1 amount of rays because of <=
+        inputLength = rays + 12 + 1; //+1 extra ray
+        gameState = new float[inputLength];
+
+
         Player = GameObject.Find("Player");
         movement = Player.GetComponent<Movement>();
         geneticAlgorithmGO = GameObject.Find("Genetic Algorithm");
         geneticAlgorithm = geneticAlgorithmGO.GetComponent<GeneticAlgorithm>();
 
-        layer1 = new DenseLayer(3, 2);
-        layer2 = new DenseLayer(2, 1);
-
-
-        Debug.Log(ForwardPass(new float[] { 1, -1, 1 })); //make sure martches size of input layer
-        Debug.Log(layer2.output[0] + " Raw output");
-        Debug.Log(Sigmoid(layer1.output[0]) + " Sigmoid of output");
-        //Debug.Log(layer2.biases[0]);
-        //layer2.biases = new float[] { 0.1f };
-        //Debug.Log(layer2.biases[0]);
+        layer1 = new DenseLayer(inputLength, 8);
+        layer2 = new DenseLayer(8, 1);
     }
 
 
@@ -79,22 +76,30 @@ public class Agent : MonoBehaviour {
 
     }
 
+    void print<T>(T[] array) {
+        Debug.Log(string.Join(" ", array));
+
+    }
+
+    float Sigmoid(float n) {
+        return 1 / (1 + Mathf.Pow(2.718281828f, -n));
+    }
+
     bool ForwardPass(float[] inputs) {
+        Debug.Log(layer1);
+        Debug.Log(inputs);
         layer1.Forward(inputs);
         layer2.Forward(layer1.output);
-        return layer2.output[0] > 0.5 ? true : false;
+        bool output = layer2.output[0] < 0.5 ? true : false;
+        Debug.Log(output + " nn output");
+        return output;
     }
 
     // Update is called once per frame
     void FixedUpdate() {
-        //distance to closest obstacle sent by ray
-        //5 speeds, 6 gamemodes, onground
-        int rays = 18; //is actually rays+1 amount of rays because of <=
-        int inputLength = rays + 12 + 1; //+1 extra ray
-        float[] gameState = new float[inputLength];
-
         fitness += 0.01f;
         int counter = 0;
+
         for (int angle = 0; angle <= 180; angle += 180/rays) {
             Quaternion rotation = Quaternion.Euler(0, 0, (angle + 270) % 360);
             Vector3 direction = rotation * Vector3.right;
@@ -122,7 +127,8 @@ public class Agent : MonoBehaviour {
         }
         gameState[counter + 11] = movement.OnGround() ? 1f : 0f;
         //TODO: is on orb
-        print(gameState);
+        //  print(gameState);
+        //movement.clicking = ForwardPass(gameState);
     }
 
     void returnInfoOnDeath() {
