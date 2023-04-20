@@ -4746,7 +4746,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e237f4b25dfef6489798937f675359a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentSpeed: 1
+  CurrentSpeed: 3
   CurrentGamemode: 1
   clickProcessed: 0
   GroundCheckRadius: 0.05

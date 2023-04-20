@@ -7,10 +7,11 @@ public class Agent : MonoBehaviour {
 
     public DenseLayer layer1;
     public DenseLayer layer2;
-
+    GameObject Player;
     GameObject geneticAlgorithmGO;
     GeneticAlgorithm geneticAlgorithm;
 
+    Movement movement;
 
     void print<T>(T[] array) {
         Debug.Log(string.Join(" ", array));
@@ -22,6 +23,8 @@ public class Agent : MonoBehaviour {
     }
     // Start is called before the first frame update
     void Start() {
+        Player = GameObject.Find("Player");
+        movement = Player.GetComponent<Movement>();
         geneticAlgorithmGO = GameObject.Find("Genetic Algorithm");
         geneticAlgorithm = geneticAlgorithmGO.GetComponent<GeneticAlgorithm>();
 
@@ -83,27 +86,43 @@ public class Agent : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
-        //x distance to closest obstacle
-        int inputLength = 180 / 4 + 5;
-        float[] gameState = new float[5];
-        fitness += 0.1f;
-        for (int angle = 0; angle <= 180; angle += 4) {
+    void FixedUpdate() {
+        //distance to closest obstacle sent by ray
+        //5 speeds, 6 gamemodes, onground
+        int rays = 18; //is actually rays+1 amount of rays because of <=
+        int inputLength = rays + 12 + 1; //+1 extra ray
+        float[] gameState = new float[inputLength];
+
+        fitness += 0.01f;
+        int counter = 0;
+        for (int angle = 0; angle <= 180; angle += 180/rays) {
             Quaternion rotation = Quaternion.Euler(0, 0, (angle + 270) % 360);
             Vector3 direction = rotation * Vector3.right;
 
             float maxDistance = 10f;
             RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance);
 
+            float distance = 0;
             if (hit) {
-                float distance = hit.distance;
-                Debug.Log("Distance to closest obstacle: " + distance);
+                distance = hit.distance;
+                //Debug.Log("Distance to closest obstacle: " + distance);
                 Debug.DrawRay(transform.position, direction * distance, Color.red);
             } else {
                 Debug.DrawRay(transform.position, direction * maxDistance, Color.green);
             }
-
+            gameState[counter] = distance;
+            counter += 1;
         }
+
+        for (int i = 0; i<5; i++) {
+            gameState[counter + i] = movement.CurrentSpeed == (Speeds)i ? 1f : 0f;
+        }
+        for (int i = 0; i < 6; i++) {
+            gameState[counter + 5 + i] = movement.CurrentGamemode == (Gamemodes)i ? 1f : 0f;
+        }
+        gameState[counter + 11] = movement.OnGround() ? 1f : 0f;
+        //TODO: is on orb
+        print(gameState);
     }
 
     void returnInfoOnDeath() {
