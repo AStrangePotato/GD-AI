@@ -122,7 +122,7 @@ public class Movement : MonoBehaviour {
 
     void FixedUpdate() {
         rb.velocity = new Vector2(0, rb.velocity.y);
-        //rb.position += Vector2.right * SpeedValues[(int) CurrentSpeed] * Time.deltaTime;
+        rb.position += Vector2.right * SpeedValues[(int) CurrentSpeed] * Time.deltaTime;
         Invoke(CurrentGamemode.ToString(), 0);
 
         if (Input.GetKeyDown(KeyCode.R)) {

@@ -90,7 +90,7 @@ public class Agent : MonoBehaviour {
         Debug.Log(inputs);
         layer1.Forward(inputs);
         layer2.Forward(layer1.output);
-        bool output = layer2.output[0] < 0.5 ? true : false;
+        bool output = layer2.output[0] > 0.5 ? true : false;
         Debug.Log(output + " nn output");
         return output;
     }
