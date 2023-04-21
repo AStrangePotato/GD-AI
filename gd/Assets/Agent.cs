@@ -7,7 +7,7 @@ public class Agent : MonoBehaviour {
 
     public DenseLayer layer1;
     public DenseLayer layer2;
-    GameObject Player;
+
     GameObject geneticAlgorithmGO;
     GeneticAlgorithm geneticAlgorithm;
 
@@ -27,9 +27,7 @@ public class Agent : MonoBehaviour {
         inputLength = rays + 12 + 1; //+1 extra ray
         gameState = new float[inputLength];
 
-
-        Player = GameObject.Find("Player");
-        movement = Player.GetComponent<Movement>();
+        movement = GetComponentInParent<Movement>();
         geneticAlgorithmGO = GameObject.Find("Genetic Algorithm");
         geneticAlgorithm = geneticAlgorithmGO.GetComponent<GeneticAlgorithm>();
 
@@ -86,35 +84,35 @@ public class Agent : MonoBehaviour {
     }
 
     bool ForwardPass(float[] inputs) {
-        Debug.Log(layer1);
-        Debug.Log(inputs);
+        //Debug.Log(inputs);
         layer1.Forward(inputs);
         layer2.Forward(layer1.output);
         bool output = layer2.output[0] > 0.5 ? true : false;
-        Debug.Log(output + " nn output");
+        Debug.Log("NN decision: " + output);
         return output;
     }
 
     // Update is called once per frame
     void FixedUpdate() {
         fitness += 0.01f;
-        int counter = 0;
 
+        #region Observe Game State
+        int counter = 0;
+        Debug.DrawRay(transform.position, Vector3.right);
         for (int angle = 0; angle <= 180; angle += 180/rays) {
             Quaternion rotation = Quaternion.Euler(0, 0, (angle + 270) % 360);
             Vector3 direction = rotation * Vector3.right;
 
             float maxDistance = 10f;
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance);
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, ~(1 << 10)); //dont interact with other agents on layer 10
 
             float distance = 0;
             if (hit) {
-                distance = hit.distance;
-                //Debug.Log("Distance to closest obstacle: " + distance);
-                Debug.DrawRay(transform.position, direction * distance, Color.red);
+                Debug.DrawRay(transform.position, direction * hit.distance, Color.red);
             } else {
                 Debug.DrawRay(transform.position, direction * maxDistance, Color.green);
             }
+
             gameState[counter] = distance;
             counter += 1;
         }
@@ -126,9 +124,17 @@ public class Agent : MonoBehaviour {
             gameState[counter + 5 + i] = movement.CurrentGamemode == (Gamemodes)i ? 1f : 0f;
         }
         gameState[counter + 11] = movement.OnGround() ? 1f : 0f;
+        #endregion
+        
         //TODO: is on orb
         //  print(gameState);
-        //movement.clicking = ForwardPass(gameState);
+        movement.clicking = ForwardPass(gameState);
+
+        if (movement.runOver) {
+            returnInfoOnDeath();
+            transform.parent.gameObject.SetActive(false);
+        }
+
     }
 
     void returnInfoOnDeath() {

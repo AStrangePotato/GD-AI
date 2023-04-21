@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Linq;
 
 public class GeneticAlgorithm : MonoBehaviour {
+    public GameObject main_agent;
     public struct NNinfo {
         public float[][] weights1;
         public float[] biases1;
@@ -14,16 +15,40 @@ public class GeneticAlgorithm : MonoBehaviour {
     float mutationStrength;
     float mutationChance;
 
-    int populationSize = 100;
+    int populationSize = 2;
     List<NNinfo> population = new List<NNinfo>();
     List<NNinfo> newPopulation;
 
+    void viewAgents(List<NNinfo> myNNInfoList) {
+        string nnInfoListString = "";
+        foreach (NNinfo nnInfo in myNNInfoList) {
+            nnInfoListString += "Fitness: " + nnInfo.fitness + "\n";
+            nnInfoListString += "Weights1:\n";
+            for (int i = 0; i < nnInfo.weights1.Length; i++) {
+                nnInfoListString += string.Join(", ", nnInfo.weights1[i].Take(3)) + " ...\n";
+            }
+            nnInfoListString += "Biases1: " + string.Join(", ", nnInfo.biases1) + "\n";
+            nnInfoListString += "Weights2:\n";
+            for (int i = 0; i < nnInfo.weights2.Length; i++) {
+                nnInfoListString += string.Join(", ", nnInfo.weights2[i]) + "\n";
+            }
+            nnInfoListString += "Biases2: " + string.Join(", ", nnInfo.biases2) + "\n";
+            nnInfoListString += "\n";
+        }
+
+        Debug.Log(nnInfoListString);
+    }
+    
     public void addAgentInfo(NNinfo nnInfo) {
         population.Add(nnInfo);
     }
 
     void Start() {
-        Debug.Log(population);
+        for (int i=0; i<populationSize; i++) {
+            Vector3 spawnPosition = main_agent.transform.position;
+            spawnPosition.x += Random.Range(-3, 3); 
+            Instantiate(main_agent, spawnPosition, Quaternion.identity);
+        }
     }
 
     void evolve() {
@@ -48,7 +73,9 @@ public class GeneticAlgorithm : MonoBehaviour {
     }
     // Update is called once per frame
     void Update() {
-        //TODO: create agents and run evolve when all have died
-
+        //TODO: create agents and run evolve when all have
+        if (population.Count == populationSize) {
+            viewAgents(population);
+        }
     }
 }

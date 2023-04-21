@@ -11,8 +11,9 @@ public class Movement : MonoBehaviour {
     public bool clickProcessed = false;
     //                       0      1      2       3      4
     float[] SpeedValues = { 8.382f, 10.386f, 12.912f, 15.6f, 19.203f };
-
+    [HideInInspector]
     public float GroundCheckRadius;
+
     public LayerMask GroundMask;
     public Transform Sprite;
 
@@ -26,17 +27,22 @@ public class Movement : MonoBehaviour {
     public Sprite waveSprite;
     public Sprite spiderSprite;
     
+    [HideInInspector]
+    public int Gravity = 1;
+
+    float rotationSpeed = 11.5f;
+
     BoxCollider2D cubeCollider;
     CircleCollider2D ballCollider;
     CapsuleCollider2D waveCollider;
 
     Rigidbody2D rb;
 
-    public int Gravity = 1;
-    float rotationSpeed = 11.5f;
+    public bool runOver = false;
 
     private Vector3 cameraRespawnPos;
     private Vector3 playerRespawnPos;
+
     void Start() {
         rb = GetComponent<Rigidbody2D>();
         cubeCollider = gameObject.GetComponent<BoxCollider2D>();
@@ -163,8 +169,8 @@ public class Movement : MonoBehaviour {
     }
 
     bool newShipClick = false;
-    public float shipFirstClickBoost = 1.5f;
-    public float shipGravity = 4.012969f;
+    float shipFirstClickBoost = 1.5f;
+    float shipGravity = 4.012969f;
     Quaternion shipTargetRotation; // this will store the target rotation for lerping
 
     void Ship() {
@@ -262,6 +268,7 @@ public class Movement : MonoBehaviour {
     }
     private void OnCollisionEnter2D(Collision2D collision) {
         if (collision.gameObject.layer == 7) {
+            runOver = true;
             respawnPlayer();
         }
     }
