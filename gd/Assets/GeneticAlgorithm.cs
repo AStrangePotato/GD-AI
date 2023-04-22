@@ -15,7 +15,7 @@ public class GeneticAlgorithm : MonoBehaviour {
     float mutationStrength;
     float mutationChance;
 
-    int populationSize = 2;
+    int populationSize = 3; //should be odd
     List<NNinfo> population = new List<NNinfo>();
     List<NNinfo> newPopulation;
 
@@ -47,7 +47,7 @@ public class GeneticAlgorithm : MonoBehaviour {
         for (int i=0; i<populationSize; i++) {
             Vector3 spawnPosition = main_agent.transform.position;
             spawnPosition.x += Random.Range(-3, 3); 
-            Instantiate(main_agent, spawnPosition, Quaternion.identity);
+            GameObject agentClone = Instantiate(main_agent, spawnPosition, Quaternion.identity);
         }
     }
 
@@ -55,7 +55,7 @@ public class GeneticAlgorithm : MonoBehaviour {
         List<NNinfo> sortedPopulation = population.OrderByDescending(individual => individual.fitness).ToList();
         List<NNinfo> breedingPool = sortedPopulation.Take(20).ToList();
         
-        for (int i=0; i<populationSize-1; i++) {
+        for (int i=0; i<(populationSize-1)/2; i++) {
             crossover(breedingPool[Random.Range(0, 19)], breedingPool[Random.Range(0, 19)]);
         }
         newPopulation.Add(breedingPool[0]); //keep the king of previous gen to prevent devolving
