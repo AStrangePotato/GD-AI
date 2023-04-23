@@ -21,9 +21,6 @@ public class Agent : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
-        //distance to closest obstacle sent by ray
-        //5 speeds, 6 gamemodes, onground
-        //is actually rays+1 amount of rays because of <=
         inputLength = rays + 12 + 1; //+1 extra ray
         gameState = new float[inputLength];
 
@@ -87,15 +84,13 @@ public class Agent : MonoBehaviour {
         //Debug.Log(inputs);
         layer1.Forward(inputs);
         layer2.Forward(layer1.output);
-        bool output = layer2.output[0] > 0.5 ? true : false;
-        Debug.Log("NN decision: " + output);
+        bool output = Sigmoid(layer2.output[0]) > 0.5 ? true : false;
+        //Debug.Log("NN decision: " + output);
         return output;
     }
 
     // Update is called once per frame
     void FixedUpdate() {
-        fitness += 0.01f;
-
         #region Observe Game State
         int counter = 0;
         Debug.DrawRay(transform.position, Vector3.right);
@@ -131,8 +126,9 @@ public class Agent : MonoBehaviour {
         movement.clicking = ForwardPass(gameState);
 
         if (movement.runOver) {
+            fitness = transform.position.y;
             returnInfoOnDeath();
-            transform.parent.gameObject.SetActive(false);
+            Destroy(transform.parent.gameObject);
         }
 
     }

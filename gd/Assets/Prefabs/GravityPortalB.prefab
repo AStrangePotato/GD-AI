@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6458777249982932982}
   - component: {fileID: 3240420947547108070}
   - component: {fileID: 2724923314265635018}
+  - component: {fileID: -7715046100477190161}
   m_Layer: 0
   m_Name: GravityPortalB
   m_TagString: Untagged
@@ -107,3 +108,19 @@ EdgeCollider2D:
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0
   m_UseAdjacentEndPoint: 0
+--- !u!114 &-7715046100477190161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8673967467551795399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da7d63a3d7f864545b6f062a4a58272c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Gamemode: 0
+  Speed: 0
+  Gravity: 1
+  key: 2

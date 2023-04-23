@@ -27,7 +27,7 @@ public class Movement : MonoBehaviour {
     public Sprite waveSprite;
     public Sprite spiderSprite;
     
-    [HideInInspector]
+
     public int Gravity = 1;
 
     float rotationSpeed = 11.5f;
@@ -287,6 +287,7 @@ public class Movement : MonoBehaviour {
             case 2: //change gravity
                 Gravity = GravityParam;
                 rb.gravityScale = Mathf.Abs(rb.gravityScale) * (int) GravityParam;
+                Sprite.localScale = new Vector3(1, Mathf.Sign(Gravity), 1);
                 break;
         }
     }

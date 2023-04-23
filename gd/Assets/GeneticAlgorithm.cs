@@ -4,6 +4,10 @@ using System.Linq;
 
 public class GeneticAlgorithm : MonoBehaviour {
     public GameObject main_agent;
+    NNinfo child1;
+    NNinfo child2;
+
+
     public struct NNinfo {
         public float[][] weights1;
         public float[] biases1;
@@ -12,12 +16,31 @@ public class GeneticAlgorithm : MonoBehaviour {
         public float fitness;
     }
 
-    float mutationStrength;
-    float mutationChance;
+    float mutationStrength = 0.01f;
+    float mutationChance = 0.05f;
 
-    int populationSize = 3; //should be odd
+    int populationSize = 25; //should be odd
     List<NNinfo> population = new List<NNinfo>();
-    List<NNinfo> newPopulation;
+    List<NNinfo> newPopulation = new List<NNinfo>();
+
+
+    void createAgent(NNinfo param=default) {
+        Vector3 spawnPosition = main_agent.transform.position;
+        spawnPosition.x += Random.Range(-3f, 3f);
+        if (EqualityComparer<NNinfo>.Default.Equals(param, default(NNinfo))) {
+            Instantiate(main_agent, spawnPosition, Quaternion.identity);
+        }
+        else {
+            GameObject agent = Instantiate(main_agent, spawnPosition, Quaternion.identity);
+            Agent agentScript = agent.GetComponent<Agent>();
+            agentScript.layer1.weights = param.weights1;
+            agentScript.layer1.biases = param.biases1;
+            agentScript.layer2.weights = param.weights2;
+            agentScript.layer2.biases = param.biases2;
+            agentScript.fitness = 0;
+        }
+    }
+
 
     void viewAgents(List<NNinfo> myNNInfoList) {
         string nnInfoListString = "";
@@ -45,37 +68,48 @@ public class GeneticAlgorithm : MonoBehaviour {
 
     void Start() {
         for (int i=0; i<populationSize; i++) {
-            Vector3 spawnPosition = main_agent.transform.position;
-            spawnPosition.x += Random.Range(-3, 3); 
-            GameObject agentClone = Instantiate(main_agent, spawnPosition, Quaternion.identity);
+            createAgent();
         }
     }
 
     void evolve() {
         List<NNinfo> sortedPopulation = population.OrderByDescending(individual => individual.fitness).ToList();
         List<NNinfo> breedingPool = sortedPopulation.Take(20).ToList();
-        
+
+        Debug.Log(breedingPool.Count + "breeding pool size");
+
         for (int i=0; i<(populationSize-1)/2; i++) {
-            crossover(breedingPool[Random.Range(0, 19)], breedingPool[Random.Range(0, 19)]);
+            crossover(breedingPool[Random.Range(0, 20)], breedingPool[Random.Range(0, 20)]);
         }
         newPopulation.Add(breedingPool[0]); //keep the king of previous gen to prevent devolving
-
+        Debug.Log(newPopulation.Count + "new generation size");
     }
 
-    NNinfo child1;
-    NNinfo child2;
     void crossover(NNinfo a, NNinfo b) {
-
         int crossPoint = Random.Range(0, a.weights1.Length-1);
 
-        newPopulation.Add(child1);
-        newPopulation.Add(child2);
+        child1 = a;
+        child2 = b;
+
+        newPopulation.Add(mutate(a));
+        newPopulation.Add(mutate(b));
+    }
+
+    NNinfo mutate(NNinfo agent) {
+        if (Random.Range(0f, 1f) <= mutationChance) {
+            return agent;
+        }
+        else {
+            return agent;
+        }
     }
     // Update is called once per frame
     void Update() {
         //TODO: create agents and run evolve when all have
         if (population.Count == populationSize) {
             viewAgents(population);
+            evolve();
+            population.Clear();
         }
     }
 }
