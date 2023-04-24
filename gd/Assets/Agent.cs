@@ -15,21 +15,24 @@ public class Agent : MonoBehaviour {
 
     //distance to closest obstacle sent by ray
     //5 speeds, 6 gamemodes, onground
-    int rays = 18; //is actually rays+1 amount of rays because of <=
-    int inputLength; //+1 extra ray
+    int rays = 1; //is actually rays+1 amount of rays because of <=
+    public int inputLength; //+1 extra ray    -    31
     float[] gameState;
 
     // Start is called before the first frame update
+
+    private void Awake() {
+        inputLength = 2; //+1 extra ray
+        layer1 = new DenseLayer(inputLength, 3);
+        layer2 = new DenseLayer(3, 1);
+    }
+
     void Start() {
-        inputLength = rays + 12 + 1; //+1 extra ray
         gameState = new float[inputLength];
 
         movement = GetComponentInParent<Movement>();
         geneticAlgorithmGO = GameObject.Find("Genetic Algorithm");
         geneticAlgorithm = geneticAlgorithmGO.GetComponent<GeneticAlgorithm>();
-
-        layer1 = new DenseLayer(inputLength, 8);
-        layer2 = new DenseLayer(8, 1);
     }
 
 
@@ -89,36 +92,39 @@ public class Agent : MonoBehaviour {
         return output;
     }
 
+    float shootRay(int angle) {
+        Quaternion rotation = Quaternion.Euler(0, 0, angle);
+        Vector3 direction = rotation * Vector3.right;
+
+        float maxDistance = 5f;
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, ~(1 << 10)); //dont interact with other agents on layer 10
+
+        float distance = 0;
+        if (hit) {
+            Debug.DrawRay(transform.position, direction * hit.distance, Color.red);
+        } else {
+            Debug.DrawRay(transform.position, direction * maxDistance, Color.green);
+        }
+
+        return distance;
+    }
     // Update is called once per frame
     void FixedUpdate() {
         #region Observe Game State
         int counter = 0;
-        Debug.DrawRay(transform.position, Vector3.right);
-        for (int angle = 0; angle <= 180; angle += 180/rays) {
-            Quaternion rotation = Quaternion.Euler(0, 0, (angle + 270) % 360);
-            Vector3 direction = rotation * Vector3.right;
-
-            float maxDistance = 10f;
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, maxDistance, ~(1 << 10)); //dont interact with other agents on layer 10
-
-            float distance = 0;
-            if (hit) {
-                Debug.DrawRay(transform.position, direction * hit.distance, Color.red);
-            } else {
-                Debug.DrawRay(transform.position, direction * maxDistance, Color.green);
-            }
-
-            gameState[counter] = distance;
-            counter += 1;
-        }
-
+        //gameState[0] = shootRay(7);
+        gameState[0] = shootRay(0);
+        //gameState[2] = shootRay(353);
+        counter += 1;
         for (int i = 0; i<5; i++) {
-            gameState[counter + i] = movement.CurrentSpeed == (Speeds)i ? 1f : 0f;
+            //gameState[counter + i] = movement.CurrentSpeed == (Speeds)i ? 1f : 0f;
         }
+        //counter += 5
         for (int i = 0; i < 6; i++) {
-            gameState[counter + 5 + i] = movement.CurrentGamemode == (Gamemodes)i ? 1f : 0f;
+            //gameState[counter + i] = movement.CurrentGamemode == (Gamemodes)i ? 1f : 0f;
         }
-        gameState[counter + 11] = movement.OnGround() ? 1f : 0f;
+        //counter += 6;
+        gameState[counter] = movement.OnGround() ? 1f : 0f;
         #endregion
         
         //TODO: is on orb
