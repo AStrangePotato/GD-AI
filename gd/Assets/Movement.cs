@@ -266,6 +266,7 @@ public class Movement : MonoBehaviour {
     public bool OnGround() {
         return Physics2D.OverlapBox(transform.position + Vector3.down * Gravity * 0.5f, Vector2.right*1.1f + Vector2.up * GroundCheckRadius, 0, GroundMask);
     }
+
     private void OnCollisionEnter2D(Collision2D collision) {
         if (collision.gameObject.layer == 7) {
             runOver = true;

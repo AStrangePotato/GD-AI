@@ -22,19 +22,16 @@ public class Agent : MonoBehaviour {
     // Start is called before the first frame update
 
     private void Awake() {
-        inputLength = 2; //+1 extra ray
+        inputLength = 1; //+1 extra ray
         layer1 = new DenseLayer(inputLength, 3);
         layer2 = new DenseLayer(3, 1);
-    }
 
-    void Start() {
         gameState = new float[inputLength];
 
         movement = GetComponentInParent<Movement>();
         geneticAlgorithmGO = GameObject.Find("Genetic Algorithm");
         geneticAlgorithm = geneticAlgorithmGO.GetComponent<GeneticAlgorithm>();
     }
-
 
     public class DenseLayer {
         public float[] biases;
@@ -76,7 +73,6 @@ public class Agent : MonoBehaviour {
 
     void print<T>(T[] array) {
         Debug.Log(string.Join(" ", array));
-
     }
 
     float Sigmoid(float n) {
@@ -84,11 +80,9 @@ public class Agent : MonoBehaviour {
     }
 
     bool ForwardPass(float[] inputs) {
-        //Debug.Log(inputs);
         layer1.Forward(inputs);
         layer2.Forward(layer1.output);
         bool output = Sigmoid(layer2.output[0]) > 0.5 ? true : false;
-        //Debug.Log("NN decision: " + output);
         return output;
     }
 
@@ -108,14 +102,31 @@ public class Agent : MonoBehaviour {
 
         return distance;
     }
-    // Update is called once per frame
+
+    int holdingJump = 0;
     void FixedUpdate() {
+        GameObject closestSpike = null;
+        float closestDistance = Mathf.Infinity;
+        float searchRange = 15f; // Search for spikes within 10 units of the player
+        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, searchRange);
+        foreach (Collider2D collider in nearbyColliders) {
+            if (collider.CompareTag("Spike")) {
+                float playerX = transform.position.x;
+                float spikeX = collider.transform.position.x;
+                if (spikeX > playerX && spikeX - playerX < closestDistance) {
+                    closestSpike = collider.gameObject;
+                    closestDistance = spikeX - playerX;
+                }
+            }
+        }
+        Debug.DrawRay(transform.position, Vector3.right * closestDistance, Color.red);
+        gameState[0] = closestDistance;
+
+
         #region Observe Game State
         int counter = 0;
-        //gameState[0] = shootRay(7);
-        gameState[0] = shootRay(0);
-        //gameState[2] = shootRay(353);
-        counter += 1;
+        //gameState[0] = shootRay(0);
+        counter += 5;
         for (int i = 0; i<5; i++) {
             //gameState[counter + i] = movement.CurrentSpeed == (Speeds)i ? 1f : 0f;
         }
@@ -124,33 +135,26 @@ public class Agent : MonoBehaviour {
             //gameState[counter + i] = movement.CurrentGamemode == (Gamemodes)i ? 1f : 0f;
         }
         //counter += 6;
-        gameState[counter] = movement.OnGround() ? 1f : 0f;
+        //gameState[counter] = movement.OnGround() ? 1f : 0f;
         #endregion
-        
-        //TODO: is on orb
-        //  print(gameState);
-        movement.clicking = ForwardPass(gameState);
+
+        bool shouldJump = ForwardPass(gameState);
+        movement.clicking = shouldJump;
 
         if (movement.runOver) {
-            fitness = transform.position.y;
+            fitness = transform.position.x;
             returnInfoOnDeath();
             Destroy(transform.parent.gameObject);
         }
-
     }
 
     void returnInfoOnDeath() {
-        geneticAlgorithm.addAgentInfo(getAgentInfo());
-    }
-
-    public GeneticAlgorithm.NNinfo getAgentInfo() {
         GeneticAlgorithm.NNinfo agentInfo;
         agentInfo.weights1 = layer1.weights;
         agentInfo.biases1 = layer1.biases;
         agentInfo.weights2 = layer2.weights;
         agentInfo.biases2 = layer2.biases;
         agentInfo.fitness = fitness;
-        return agentInfo;
+        geneticAlgorithm.addAgentInfo(agentInfo);
     }
-
 }

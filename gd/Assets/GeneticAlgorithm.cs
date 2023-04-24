@@ -7,7 +7,6 @@ public class GeneticAlgorithm : MonoBehaviour {
     NNinfo child1;
     NNinfo child2;
 
-
     public struct NNinfo {
         public float[][] weights1;
         public float[] biases1;
@@ -16,17 +15,17 @@ public class GeneticAlgorithm : MonoBehaviour {
         public float fitness;
     }
 
-    float mutationStrength = 0.01f;
-    float mutationChance = 0.05f;
+    float mutationStrength = 0.2f;
+    float mutationChance = 0.5f;
 
-    int populationSize = 19; //should be odd
+    int populationSize = 15; //should be odd
     List<NNinfo> population = new List<NNinfo>();
     List<NNinfo> newPopulation = new List<NNinfo>();
 
 
     void createAgent(NNinfo param=default) {
         Vector3 spawnPosition = main_agent.transform.position;
-        spawnPosition.x += Random.Range(-.3f, .3f);
+        spawnPosition.x += Random.Range(-.5f, .5f);
         if (EqualityComparer<NNinfo>.Default.Equals(param, default(NNinfo))) {
             Instantiate(main_agent, spawnPosition, Quaternion.identity);
         }
@@ -48,7 +47,7 @@ public class GeneticAlgorithm : MonoBehaviour {
             nnInfoListString += "Fitness: " + nnInfo.fitness + "\n";
             nnInfoListString += "Weights1:\n";
             for (int i = 0; i < nnInfo.weights1.Length; i++) {
-                nnInfoListString += string.Join(", ", nnInfo.weights1[i].Take(3)) + " ...\n";
+                nnInfoListString += string.Join(", ", nnInfo.weights1[i]) + "\n";
             }
             nnInfoListString += "Biases1: " + string.Join(", ", nnInfo.biases1) + "\n";
             nnInfoListString += "Weights2:\n";
@@ -73,16 +72,24 @@ public class GeneticAlgorithm : MonoBehaviour {
         Application.runInBackground = true;
     }
 
+    //chatgpt
+    private int RandTriangular() {
+        int n = populationSize-1;
+        double u = Random.value;
+        double v = Random.value;
+        double x = Mathf.Min((float)u, (float)v) * n;
+        if (u > v)
+            x = n - x;
+        return (int)x;
+    }
+
     void evolve() {
         List<NNinfo> sortedPopulation = population.OrderByDescending(individual => individual.fitness).ToList();
-        List<NNinfo> breedingPool = sortedPopulation.Take(60).ToList();
-        //redundant 
 
-
-        NNinfo champion = breedingPool[0];
+        NNinfo champion = sortedPopulation[0];
         newPopulation.Add(champion); //keep the king of previous gen to prevent devolving
         for (int i = 0; i < populationSize - 1; i++) {
-            newPopulation.Add(codeNoodles(population[i]));
+            newPopulation.Add(codeNoodles(sortedPopulation[RandTriangular()]));
         }
 
         foreach (NNinfo nninfo in newPopulation) {
@@ -97,13 +104,12 @@ public class GeneticAlgorithm : MonoBehaviour {
     }
 
     float baguette() {
-        return Random.Range(-1f, 1f) / mutationStrength;
+        return Random.Range(-1f, 1f) * mutationStrength;
     }
 
     NNinfo codeNoodles(NNinfo agentInfo) {
         //holy shit
-        NNinfo newInfo = new NNinfo();
-        newInfo.weights1 = new float[][] { new float[] { 1, 2 }, new float[] { 2, 2 } };
+        NNinfo newInfo = agentInfo;
 
         for (int n=0; n<agentInfo.weights1.Length; n++) {
             for (int w=0; w<agentInfo.weights1[0].Length; w++) {
@@ -118,70 +124,24 @@ public class GeneticAlgorithm : MonoBehaviour {
             }
         }
         for (int n = 0; n < agentInfo.biases1.Length; n++) {
-            if (yes())
+            if (yes()) {
                 newInfo.biases1[n] += baguette();
+                newInfo.biases1[n] = Mathf.Clamp(newInfo.biases1[n], -10, 10);
+            }
         }
         for (int n = 0; n < agentInfo.biases2.Length; n++) {
-            if (yes())
+            if (yes()) {
                 newInfo.biases2[n] += baguette();
+                newInfo.biases2[n] = Mathf.Clamp(newInfo.biases2[n], -10, 10);
+            }
         }
-
         return newInfo;
     }
-
-    void crossover(NNinfo a, NNinfo b) {
-        int length = a.weights1.Length;
-        int crossPoint = Random.Range(0, length);
-
-        child1 = a;
-        child2 = b;
-        float[][] c1neurons = child1.weights1;
-        float[][] c2neurons = child2.weights1;
-
-        for (int i=0; i<length; i++) {
-            if (i < crossPoint) {
-                c1neurons[i] = child1.weights1[i];
-                c2neurons[i] = child2.weights1[i];
-            } else {
-                c1neurons[i] = child2.weights1[i];
-                c2neurons[i] = child1.weights1[i];
-            }
-        }
-
-        child1.weights1 = c1neurons;
-        child2.weights1 = c2neurons;
-
-        newPopulation.Add(mutate(child1));
-        newPopulation.Add(mutate(child2));
-    }
-    NNinfo mutate(NNinfo agent) {
-        if (Random.Range(0f, 1f) <= mutationChance) {
-            if (Random.Range(0f, 1f) <= 0.5) { //weights2
-                agent.weights2[Random.Range(0, agent.weights2.Length)] [Random.Range(0, 3)] += Random.Range(-1f, 1f) / mutationStrength;
-            }
-            else { //weights1
-                agent.weights1[Random.Range(0, agent.weights1.Length)] [Random.Range(0, 2)] += Random.Range(-1f, 1f)/mutationStrength;
-            }
-
-            if (Random.Range(0f, 1f) <= 0.5) { //biases2
-                agent.biases2[Random.Range(0, agent.biases2.Length)] += Random.Range(-1f, 1f) / mutationStrength;
-            } else { //biases1
-                agent.biases1[Random.Range(0, agent.biases1.Length)] += Random.Range(-1f, 1f) / mutationStrength;
-            }
-
-            return agent;
-        }
-
-        else { //dont mutate
-            return agent;
-        }
-    }
-
 
     void Update() {
         //TODO: create agents and run evolve when all have
         if (population.Count == populationSize) {
-            viewAgents(population);
+            //viewAgents(population.OrderByDescending(individual => individual.fitness).ToList());
             evolve();
         }
     }

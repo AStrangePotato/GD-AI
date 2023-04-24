@@ -135,7 +135,7 @@ MonoBehaviour:
   GroundCheckRadius: 0.05
   GroundMask:
     serializedVersion: 2
-    m_Bits: 768
+    m_Bits: 512
   Sprite: {fileID: 2759065139262991116}
   trail: {fileID: 2759065139262991118}
   spriteRenderer: {fileID: 2759065139262991119}
