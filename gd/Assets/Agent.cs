@@ -13,16 +13,11 @@ public class Agent : MonoBehaviour {
 
     Movement movement;
 
-    //distance to closest obstacle sent by ray
-    //5 speeds, 6 gamemodes, onground
-    int rays = 1; //is actually rays+1 amount of rays because of <=
     public int inputLength; //+1 extra ray    -    31
     float[] gameState;
 
-    // Start is called before the first frame update
-
     private void Awake() {
-        inputLength = 1; //+1 extra ray
+        inputLength = 2; //distance to closest obstacle, block or spike
         layer1 = new DenseLayer(inputLength, 3);
         layer2 = new DenseLayer(3, 1);
 
@@ -103,43 +98,34 @@ public class Agent : MonoBehaviour {
         return distance;
     }
 
-    int holdingJump = 0;
     void FixedUpdate() {
         GameObject closestSpike = null;
+        int closestObstacleType = 0;
+
         float closestDistance = Mathf.Infinity;
         float searchRange = 15f; // Search for spikes within 10 units of the player
         Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, searchRange);
         foreach (Collider2D collider in nearbyColliders) {
-            if (collider.CompareTag("Spike")) {
-                float playerX = transform.position.x;
-                float spikeX = collider.transform.position.x;
-                if (spikeX > playerX && spikeX - playerX < closestDistance) {
-                    closestSpike = collider.gameObject;
-                    closestDistance = spikeX - playerX;
+            float playerX = transform.position.x;
+            float spikeX = collider.transform.position.x;
+            if (spikeX > playerX && spikeX - playerX < closestDistance) {
+                closestSpike = collider.gameObject;
+                closestDistance = spikeX - playerX;
+                if (collider.CompareTag("Spike")) {
+                    closestObstacleType = 0;
+                    Debug.DrawRay(transform.position, Vector3.right * closestDistance, Color.red);
+                } else if (collider.CompareTag("Block")) {
+                    closestObstacleType = 1;
+                    Debug.DrawRay(transform.position, Vector3.right * closestDistance, Color.blue);
                 }
             }
         }
-        Debug.DrawRay(transform.position, Vector3.right * closestDistance, Color.red);
+
+
         gameState[0] = closestDistance;
+        gameState[1] = closestObstacleType;   
 
-
-        #region Observe Game State
-        int counter = 0;
-        //gameState[0] = shootRay(0);
-        counter += 5;
-        for (int i = 0; i<5; i++) {
-            //gameState[counter + i] = movement.CurrentSpeed == (Speeds)i ? 1f : 0f;
-        }
-        //counter += 5
-        for (int i = 0; i < 6; i++) {
-            //gameState[counter + i] = movement.CurrentGamemode == (Gamemodes)i ? 1f : 0f;
-        }
-        //counter += 6;
-        //gameState[counter] = movement.OnGround() ? 1f : 0f;
-        #endregion
-
-        bool shouldJump = ForwardPass(gameState);
-        movement.clicking = shouldJump;
+        movement.clicking = ForwardPass(gameState);
 
         if (movement.runOver) {
             fitness = transform.position.x;
